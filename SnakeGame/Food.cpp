@@ -4,17 +4,7 @@
 #include "Utils.h"
 
 Food::Food(const std::deque<Vector2>& snake_body) {
-    Image image = LoadImage("C:/Users/Moorthy/Desktop/Food.png");
-    if (!image.data) {
-        throw std::runtime_error("Failed to load image: Food.png");
-    }
-    sprite = LoadTextureFromImage(image);
-    UnloadImage(image);
     position = find_random_position(snake_body);
-}
-
-Food::~Food() {
-    UnloadTexture(sprite);
 }
 
 void Food::render() {
@@ -33,19 +23,19 @@ void Food::render() {
     );
     DrawTriangle(
         Vector2
-        { 
+        {
             screen_margin + position.x * cell_dimension + cell_dimension / 2 + 4,
-            screen_margin + position.y * cell_dimension + cell_dimension / 2 - cell_dimension / 2 - 2 
+            screen_margin + position.y * cell_dimension + cell_dimension / 2 - cell_dimension / 2 - 2
         },
         Vector2
-        { 
+        {
             screen_margin + position.x * cell_dimension + cell_dimension / 2 + 8,
-            screen_margin + position.y * cell_dimension + cell_dimension / 2 - cell_dimension / 2 - 10 
+            screen_margin + position.y * cell_dimension + cell_dimension / 2 - cell_dimension / 2 - 10
         },
         Vector2
-        { 
+        {
             screen_margin + position.x * cell_dimension + cell_dimension / 2 + 12,
-            screen_margin + position.y * cell_dimension + cell_dimension / 2 - cell_dimension / 2 - 2 
+            screen_margin + position.y * cell_dimension + cell_dimension / 2 - cell_dimension / 2 - 2
         },
         GREEN
     );

@@ -1,5 +1,4 @@
 #include <iostream>
-
 #include "Game.h"
 #include "Utils.h"
 
@@ -8,8 +7,8 @@ using namespace std;
 int main() {
     cout << "Starting the game..." << endl;
     InitWindow(
-        2 * screen_margin + cell_dimension * grid_size, 
-        2 * screen_margin + cell_dimension * grid_size, 
+        2 * screen_margin + cell_dimension * grid_size,
+        2 * screen_margin + cell_dimension * grid_size,
         "Snake"
     );
     SetTargetFPS(120);
@@ -18,12 +17,14 @@ int main() {
     double update_interval = 0.1;
 
     while (!WindowShouldClose()) {
+        float deltaTime = GetFrameTime();
+
         UpdateMusicStream(game.background_music);
 
         BeginDrawing();
         ClearBackground(light_blue);
 
-        if (should_update(update_interval)) {
+        if (should_update(update_interval / game.snake_speed)) {
             can_move = true;
             game.update();
         }
@@ -49,28 +50,6 @@ int main() {
             can_move = false;
         }
 
-        ClearBackground(light_blue);
-        DrawRectangleLinesEx(
-            { 
-                (float)screen_margin - 5, 
-                (float)screen_margin - 5, 
-                (float)cell_dimension * grid_size + 10, 
-                (float)cell_dimension * grid_size + 10 
-            }, 
-            5, 
-            deep_blue
-        );
-        DrawText("Snake", screen_margin - 5, 20, 40, deep_blue);
-        DrawText(
-            TextFormat(
-                "%i", 
-                game.score
-            ), 
-            screen_margin - 5, 
-            screen_margin + cell_dimension * grid_size + 10, 
-            40, 
-            deep_blue
-        );
         game.render();
 
         EndDrawing();

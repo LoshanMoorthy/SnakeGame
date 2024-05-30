@@ -7,11 +7,11 @@ void Snake::render() {
     for (const auto& segment : segments) {
         float x = segment.x;
         float y = segment.y;
-        Rectangle rect = 
-            { 
-                screen_margin + x * cell_dimension, screen_margin + y * cell_dimension, 
-                (float)cell_dimension, (float)cell_dimension
-            };
+        Rectangle rect =
+        {
+            screen_margin + x * cell_dimension, screen_margin + y * cell_dimension,
+            (float)cell_dimension, (float)cell_dimension
+        };
         DrawRectangleRounded(rect, 0.5, 6, deep_blue);
     }
 }

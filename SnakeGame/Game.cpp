@@ -3,14 +3,15 @@
 
 const std::string HIGH_SCORE_FILE = "high_score.txt";
 
-Game::Game() : snake(), is_running(true), score(0), high_score(read_high_score(HIGH_SCORE_FILE)), state(MENU) {
+Game::Game() : snake(), is_running(true), score(0), high_score(read_high_score(HIGH_SCORE_FILE)), state(MENU), current_level(1), snake_speed(1.0f) {
     InitAudioDevice();
-    eat_sound = LoadSound("C:/Users/Moorthy/Desktop/food.mp3");
-    game_over_sound = LoadSound("C:/Users/Moorthy/Desktop/gameover.mp3");
-    background_music = LoadMusicStream("C:/Users/Moorthy/Desktop/music.mp3");
+    eat_sound = LoadSound("C:/repos/SnakeGame/Ressources/food.mp3");
+    game_over_sound = LoadSound("C:/repos/SnakeGame/Ressources/gameover.mp3");
+    background_music = LoadMusicStream("C:/repos/SnakeGame/Ressources/music.mp3");
     PlayMusicStream(background_music);
     SetMusicVolume(background_music, 0.1f);
     food = new Food(snake.segments);
+    level = new Level(current_level);
 }
 
 Game::~Game() {
@@ -19,6 +20,7 @@ Game::~Game() {
     UnloadMusicStream(background_music);
     CloseAudioDevice();
     delete food;
+    delete level;
 }
 
 void Game::render() {
@@ -26,6 +28,26 @@ void Game::render() {
         render_menu();
     }
     else if (state == PLAYING) {
+        ClearBackground(light_blue);
+        DrawRectangleLinesEx(
+            {
+                (float)screen_margin - 5,
+                (float)screen_margin - 5,
+                (float)cell_dimension * grid_size + 10,
+                (float)cell_dimension * grid_size + 10
+            },
+            5,
+            deep_blue
+        );
+        DrawText("Snake", screen_margin - 5, 20, 40, deep_blue);
+        DrawText(
+            TextFormat("%i", score),
+            screen_margin - 5,
+            screen_margin + cell_dimension * grid_size + 10,
+            40,
+            deep_blue
+        );
+        level->render();
         food->render();
         snake.render();
     }
@@ -44,11 +66,14 @@ void Game::update() {
         check_food_collision();
         check_wall_collision();
         check_self_collision();
+        check_obstacle_collision();
+        increase_difficulty();
     }
     else if (state == GAME_OVER) {
         update_game_over();
     }
 }
+
 
 void Game::check_food_collision() {
     if (Vector2Equals(snake.segments[0], food->position)) {
@@ -72,6 +97,12 @@ void Game::check_self_collision() {
             game_over();
             break;
         }
+    }
+}
+
+void Game::check_obstacle_collision() {
+    if (level->check_collision_with_obstacles(snake.segments[0])) {
+        game_over();
     }
 }
 
@@ -110,16 +141,57 @@ void Game::render_menu() {
     );
     DrawText(
         TextFormat(
-            "High Score: %i", 
+            "High Score: %i",
             high_score
         ),
         GetScreenWidth() / 2 - MeasureText(
-            TextFormat(
-                "High Score: %i", 
-                high_score
-            ), 
-            20
-        ) / 2,
+        TextFormat(
+            "High Score: %i",
+            high_score
+        ),
+        20
+    ) / 2,
+        GetScreenHeight() / 2 + 60,
+        20,
+        deep_blue
+    );
+}
+
+void Game::render_game_over() {
+    ClearBackground(light_blue);
+    DrawText(
+        "Game Over",
+        GetScreenWidth() / 2 - MeasureText("Game Over", 40) / 2,
+        GetScreenHeight() / 2 - 60,
+        40,
+        deep_blue
+    );
+    DrawText(
+        "Press ENTER to Try Again",
+        GetScreenWidth() / 2 - MeasureText("Press ENTER to Try Again", 20) / 2,
+        GetScreenHeight() / 2,
+        20,
+        deep_blue
+    );
+    DrawText(
+        "Press ESC to Exit",
+        GetScreenWidth() / 2 - MeasureText("Press ESC to Exit", 20) / 2,
+        GetScreenHeight() / 2 + 30,
+        20,
+        deep_blue
+    );
+    DrawText(
+        TextFormat(
+            "High Score: %i",
+            high_score
+        ),
+        GetScreenWidth() / 2 - MeasureText(
+        TextFormat(
+            "High Score: %i",
+            high_score
+        ),
+        20
+    ) / 2,
         GetScreenHeight() / 2 + 60,
         20,
         deep_blue
@@ -133,53 +205,16 @@ void Game::update_menu() {
         snake.reset();
         delete food;
         food = new Food(snake.segments);
+        current_level = 1;
+        snake_speed = 1.0f;
+        delete level;
+        level = new Level(current_level);
         score = 0;
     }
     else if (IsKeyPressed(KEY_ESCAPE)) {
         CloseWindow();
         exit(0);
     }
-}
-
-void Game::render_game_over() {
-    ClearBackground(light_blue);
-    DrawText(
-        "Game Over", 
-        GetScreenWidth() / 2 - MeasureText("Game Over", 40) / 2,
-        GetScreenHeight() / 2 - 60, 
-        40, 
-        deep_blue
-    );
-    DrawText(
-        "Press ENTER to Try Again",
-        GetScreenWidth() / 2 - MeasureText("Press ENTER to Try Again", 20) / 2,
-        GetScreenHeight() / 2, 
-        20, 
-        deep_blue
-    );
-    DrawText(
-        "Press ESC to Exit", 
-        GetScreenWidth() / 2 - MeasureText("Press ESC to Exit", 20) / 2,
-        GetScreenHeight() / 2 + 30, 
-        20, 
-        deep_blue
-    );
-    DrawText(
-        TextFormat(
-            "High Score: %i",
-            high_score
-        ),
-        GetScreenWidth() / 2 - MeasureText(
-            TextFormat(
-            "High Score: %i",
-            high_score
-            ),
-            20
-        ) / 2,
-        GetScreenHeight() / 2 + 60,
-        20,
-        deep_blue
-    );
 }
 
 void Game::update_game_over() {
@@ -189,10 +224,23 @@ void Game::update_game_over() {
         snake.reset();
         delete food;
         food = new Food(snake.segments);
+        current_level = 1;
+        snake_speed = 1.0f;
+        delete level;
+        level = new Level(current_level);
         score = 0;
     }
     else if (IsKeyPressed(KEY_ESCAPE)) {
         CloseWindow();
         exit(0);
+    }
+}
+
+void Game::increase_difficulty() {
+    if (score % 10 == 0 && score != 0) {
+        current_level++;
+        snake_speed += 0.2f;
+        delete level;
+        level = new Level(current_level);
     }
 }
